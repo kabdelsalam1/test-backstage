@@ -1,0 +1,8 @@
+site_name: "test-backstage"
+site_description: "test-backstage"
+
+nav:
+  - Introduction: index.md
+
+plugins:
+  - techdocs-core

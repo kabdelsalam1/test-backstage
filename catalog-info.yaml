@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "test-backstage"
+  description: "test-backstage"
+  annotations:
+    github.com/project-slug: kabdelsalam1/test-backstage
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: documentation
+  lifecycle: experimental
+  owner: "kabdelsalam1"
