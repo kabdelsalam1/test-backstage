@@ -1,0 +1,97 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: dotnet-webjob-template
+  title: .NET Webjob App
+  description: Create a new .NET webjob application
+  tags:
+    - dotnet
+    - azure-devops
+spec:
+  owner: woolworthslimited
+  type: service
+
+  parameters:
+    - title: Project Information
+      required:
+        - name
+        - description
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Test
+          ui:field: EntityNamePicker
+          ui:autofocus: true
+        description:
+          title: Description
+          type: string
+          description: A description for the application
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - dev.azure.com
+
+  steps:
+    - id: fetch watermark
+      name: Fetch watermark file
+      action: fetch:plain
+      input:
+        url: https://github.com/woolworthslimited/wow-templates/tree/master/watermark
+
+    - id: fetch
+      name: Fetch template source code
+      action: fetch:template
+      input:
+        url: https://github.com/woolworthslimited/wow-templates/tree/master/dotnet-webjob-timer
+        copyWithoutRender: ['deploy.yaml', 'build.yaml', 'pipeline.yaml']
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          owner: ${{ parameters.owner }}
+          
+    - id: project-rename
+      name: Rename project
+      action: wooliesx:project-rename
+      input:
+        from: MyTribe
+        to: ${{ parameters.name }}
+          
+    - id: publish
+      name: Publish
+      action: publish:azure
+      input:
+        allowedHosts: ["dev.azure.com"]
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "/catalog-info.yaml"
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
